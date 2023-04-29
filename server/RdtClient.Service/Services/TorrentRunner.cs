@@ -187,7 +187,6 @@ public class TorrentRunner
 
                     await _downloads.UpdateDownloadFinished(downloadId, DateTimeOffset.UtcNow);
                     await _downloads.UpdateUnpackingQueued(downloadId, DateTimeOffset.UtcNow);
-                    await _plexService.RefreshLibraries();
                 }
 
                 ActiveDownloadClients.TryRemove(downloadId, out _);
@@ -560,8 +559,6 @@ public class TorrentRunner
                         {
                             _logger.LogError(ex.Message, "Unable to run post process: {Message}", ex.Message);
                         }
-                        
-                        await _plexService.RefreshLibraries();
                     }
                     else
                     {

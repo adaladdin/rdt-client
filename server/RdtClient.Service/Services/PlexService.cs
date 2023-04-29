@@ -41,55 +41,70 @@ public class PlexService
     public async Task RefreshLibraries()
     {
         _logger.LogInformation("Refreshing plex libraries.");
-        
-        var host = Settings.Get.Plex.Host;
-        var token = Settings.Get.Plex.Token;
-        var libraries = Settings.Get.Plex.LibrariesToRefresh;
 
-        if (host == null || token == null || libraries == null)
+        try
         {
-            _logger.LogInformation("Refresh failed. host/token/libraries empty.");
-            return;
-        }
-        
-        if (!Uri.TryCreate(host, UriKind.Absolute, out var uriResult)
-            && uriResult.Scheme == Uri.UriSchemeHttp)
-        {
-            _logger.LogInformation("Refresh failed. Host not a valid URI.");
-            return;
-        }
 
-        var libraryIndices = new List<String>();
 
-        libraries.Split(",")
-                 .ForEach(s =>
-                 {
-                     var trimmed = s.Trim();
+            var host = Settings.Get.Plex.Host;
+            var token = Settings.Get.Plex.Token;
+            var libraries = Settings.Get.Plex.LibrariesToRefresh;
 
-                     if (Int32.TryParse(s.Trim(), out _))
+            if (host == null || token == null || libraries == null)
+            {
+                _logger.LogInformation("Refresh failed. host/token/libraries empty.");
+
+                return;
+            }
+
+            if (!Uri.TryCreate(host, UriKind.Absolute, out var uriResult)
+                && uriResult.Scheme == Uri.UriSchemeHttp)
+            {
+                _logger.LogInformation("Refresh failed. Host not a valid URI.");
+
+                return;
+            }
+
+            var libraryIndices = new List<String>();
+
+            libraries.Split(",")
+                     .ForEach(s =>
                      {
-                         libraryIndices.Add(trimmed);
-                     }
-                 });
+                         var trimmed = s.Trim();
 
-        if (!libraryIndices.Any())
-        {
-            return;
-        }
-        
-        _logger.LogInformation($"{libraryIndices.Count} libraries to refresh.");
-        
-        var cleanedHost = host.EndsWith(@"/") ? host : host + "/";
-        
-        using var client = new HttpClient();
+                         if (Int32.TryParse(s.Trim(), out _))
+                         {
+                             libraryIndices.Add(trimmed);
+                         }
+                     });
 
-        foreach (var index in libraryIndices)
-        {
-            using var request = new HttpRequestMessage(HttpMethod.Get, $@"{cleanedHost}?library/sections/{index}/refresh?X-Plex-Token={token}");
-            var response = await client.SendAsync(request);
-            response.EnsureSuccessStatusCode();
+            if (!libraryIndices.Any())
+            {
+                return;
+            }
+
+            _logger.LogInformation($"{libraryIndices.Count} libraries to refresh.");
+
+            var cleanedHost = host.EndsWith(@"/") ? host : host + "/";
+
+            using var client = new HttpClient();
+
+            foreach (var index in libraryIndices)
+            {
+                var url = $@"{cleanedHost}?library/sections/{index}/refresh?X-Plex-Token={token}";
+                _logger.LogInformation($"Library refersh url: [{url}]");
+                using var request = new HttpRequestMessage(HttpMethod.Get, url);
+                var response = await client.SendAsync(request);
+                response.EnsureSuccessStatusCode();
+            }
         }
-        
-        _logger.LogInformation($"Finished refreshing libraries.");
+        catch (Exception ex)
+        {
+            _logger.LogError($"Error while refreshing: {ex.Message} | {ex.StackTrace}");
+        }
+        finally
+        {
+            _logger.LogInformation($"Finished refreshing libraries.");    
+        }
     }
 }
