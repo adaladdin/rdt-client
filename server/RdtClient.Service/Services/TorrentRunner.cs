@@ -21,14 +21,16 @@ public class TorrentRunner
     private readonly Torrents _torrents;
     private readonly Downloads _downloads;
     private readonly RemoteService _remoteService;
+    private readonly PlexService _plexService;
     private readonly HttpClient _httpClient;
 
-    public TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Downloads downloads, RemoteService remoteService)
+    public TorrentRunner(ILogger<TorrentRunner> logger, Torrents torrents, Downloads downloads, RemoteService remoteService, PlexService plexService)
     {
         _logger = logger;
         _torrents = torrents;
         _downloads = downloads;
         _remoteService = remoteService;
+        _plexService = plexService;
 
         _httpClient = new HttpClient
         {
@@ -185,6 +187,7 @@ public class TorrentRunner
 
                     await _downloads.UpdateDownloadFinished(downloadId, DateTimeOffset.UtcNow);
                     await _downloads.UpdateUnpackingQueued(downloadId, DateTimeOffset.UtcNow);
+                    await _plexService.RefreshLibraries();
                 }
 
                 ActiveDownloadClients.TryRemove(downloadId, out _);

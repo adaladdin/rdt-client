@@ -11,6 +11,7 @@ public static class DiConfig
 {
     public static void Config(IServiceCollection services)
     {
+        services.AddScoped<PlexService>();
         services.AddScoped<AllDebridTorrentClient>();
         services.AddScoped<Authentication>();
         services.AddScoped<Downloads>();
@@ -21,7 +22,6 @@ public static class DiConfig
         services.AddScoped<Settings>();
         services.AddScoped<Torrents>();
         services.AddScoped<TorrentRunner>();
-        services.AddScoped<PlexService>();
 
         services.AddSingleton<IAuthorizationHandler, AuthSettingHandler>();
             
