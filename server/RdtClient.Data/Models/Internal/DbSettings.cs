@@ -14,6 +14,10 @@ public class DbSettings
     [DisplayName("Download Client")]
     [Description("")]
     public DbSettingsDownloadClient DownloadClient { get; set; } = new();
+    
+    [DisplayName("Plex")]
+    [Description("")]
+    public DbSettingsPlex Plex { get; set; } = new ();
 
     [DisplayName("Provider")]
     [Description("")]
@@ -111,6 +115,13 @@ http://127.0.0.1:6800/jsonrpc.")]
     [DisplayName("Aria2c Secret (only used for the Aria2c Downloader)")]
     [Description("The secret of your Aria2c instance. Optional.")]
     public String Aria2cSecret { get; set; } = "mysecret123";
+}
+
+public class DbSettingsPlex
+{
+    [DisplayName("Token")]
+    [Description(@"Plex user token for server admin to refresh libraries after a download is added.")]
+    public String? Token { get; set; } = null;
 }
 
 public class DbSettingsProvider
