@@ -85,6 +85,28 @@
   </div>
 
   <div class="field">
+    <label class="label">Test Plex connection</label>
+    <div class="control">
+      <button
+        class="button is-warning"
+        (click)="testPlexConnection()"
+        [disabled]="saving"
+        [ngClass]="{ 'is-loading': saving }"
+        *ngIf="!testPlexError && !testPlexSuccess"
+      >
+        Test Plex
+      </button>
+      <div class="notification is-danger is-light" *ngIf="testPlexError">
+        Could not test plex connection<br />
+        {{ testPlexError }}
+      </div>
+
+      <div class="notification is-success is-light" *ngIf="testPlexSuccess">Plex connection looks good! {{testPlexSuccess}}</div>
+    </div>
+    <div class="help">This will check if the plex token is valid and can be used to connect and scan for libraries.</div>
+  </div>
+
+  <div class="field">
     <label class="label">Test Real-Debrid download speed</label>
     <div class="control">
       <button
@@ -133,6 +155,7 @@
     </div>
     <div class="help">This will write a small file to your download folder to see how fast it can write to it.</div>
   </div>
+
 </div>
 
 <div class="field">

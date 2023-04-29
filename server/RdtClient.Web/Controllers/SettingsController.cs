@@ -17,11 +17,13 @@ public class SettingsController : Controller
 {
     private readonly Settings _settings;
     private readonly Torrents _torrents;
+    private readonly PlexService _plexService;
 
-    public SettingsController(Settings settings, Torrents torrents)
+    public SettingsController(Settings settings, Torrents torrents, PlexService plexService)
     {
         _settings = settings;
         _torrents = torrents;
+        _plexService = plexService;
     }
 
     [HttpGet]
@@ -83,6 +85,32 @@ public class SettingsController : Controller
 
         return Ok();
     }
+    
+    [HttpPost]
+    [Route("TestPlex")]
+    public async Task<ActionResult> TestPlex([FromBody] SettingsControllerTestPlexRequest? request)
+    {
+        if (request == null)
+        {
+            return BadRequest();
+        }
+
+        if (String.IsNullOrEmpty(request.Token))
+        {
+            return BadRequest("Invalid token");
+        }
+
+        var libraries = await _plexService.TestToken(request.Token);
+
+        if (libraries == null)
+        {
+            return NotFound("No libraries found");
+        }
+
+        var combinedLibraries = String.Join(", ", libraries.Select(l => l.Title));
+        
+        return Ok(combinedLibraries);
+    }
         
     [HttpGet]
     [Route("TestDownloadSpeed")]
@@ -142,7 +170,7 @@ public class SettingsController : Controller
 
         return Ok(downloadClient.Speed);
     }
-        
+
     [HttpGet]
     [Route("TestWriteSpeed")]
     public async Task<ActionResult> TestWriteSpeed()
@@ -208,6 +236,11 @@ public class SettingsController : Controller
 public class SettingsControllerTestPathRequest
 {
     public String? Path { get; set; }
+}
+
+public class SettingsControllerTestPlexRequest
+{
+    public String? Token { get; set; }
 }
 
 public class SettingsControllerTestAria2cConnectionRequest

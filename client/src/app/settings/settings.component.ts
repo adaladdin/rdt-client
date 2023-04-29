@@ -18,6 +18,9 @@ export class SettingsComponent implements OnInit {
   public testPathError: string;
   public testPathSuccess: boolean;
 
+  public testPlexError: string;
+  public testPlexSuccess: string;
+
   public testDownloadSpeedError: string;
   public testDownloadSpeedSuccess: number;
 
@@ -76,6 +79,31 @@ export class SettingsComponent implements OnInit {
         this.testPathSuccess = true;
       },
       (err) => {
+        this.testPathError = err.error;
+        this.saving = false;
+      }
+    );
+  }
+
+  public testPlexConnection(): void {
+    const plexToken = this.tabs
+      .first((m) => m.key === 'Plex')
+      .settings.first((m) => m.key === 'Plex:Token').value as string;
+
+    console.log('plex token', plexToken);
+
+    this.saving = true;
+    this.testPlexError = null;
+    this.testPlexSuccess = null;
+
+    this.settingsService.testPlex(plexToken).subscribe(
+      (result) => {
+        console.log('plex test result', result);
+        this.saving = false;
+        this.testPlexSuccess = result;
+      },
+      (err) => {
+        console.log('plex test error', err);
         this.testPathError = err.error;
         this.saving = false;
       }
