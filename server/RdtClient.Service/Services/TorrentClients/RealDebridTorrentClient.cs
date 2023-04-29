@@ -200,6 +200,20 @@ public class RealDebridTorrentClient : ITorrentClient
             files = torrent.Files;
         }
 
+        var videoExtensions = new List<String>
+        {
+            ".mp4",
+            ".mov",
+            ".wmv",
+            ".avi",
+            ".avchd",
+            ".mkv",
+            ".mpeg"
+        };
+
+        files = files.Where(f => videoExtensions.Contains(Path.GetExtension(f.Path.ToLower())))
+                     .ToList();
+        
         var fileIds = files.Select(m => m.Id.ToString()).ToArray();
 
         Log($"Selecting files:");
