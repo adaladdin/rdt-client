@@ -26,8 +26,8 @@ export class SettingsService {
     return this.http.post<void>(`/Api/Settings/TestPath`, { path });
   }
 
-  public testPlex(token: string): Observable<string> {
-    return this.http.post<string>(`/Api/Settings/TestPlex`, { token })
+  public testPlex(host: string, token: string): Observable<string> {
+    return this.http.post<string>(`/Api/Settings/TestPlex`, { host, token })
   }
 
   public testDownloadSpeed(): Observable<number> {

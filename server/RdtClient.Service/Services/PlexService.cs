@@ -1,68 +1,95 @@
 ﻿using Microsoft.Extensions.Logging;
-using Plex.Api.Factories;
-using Plex.Library.ApiModels.Libraries;
+using SharpCompress;
 
 namespace RdtClient.Service.Services;
 
 public class PlexService
 {
     private readonly ILogger<PlexService> _logger;
-    private readonly IPlexFactory _plexFactory;
     private readonly Settings _settings;
 
-    public PlexService(ILogger<PlexService> logger, Settings settings, IPlexFactory plexFactory)
+    public PlexService(ILogger<PlexService> logger, Settings settings)
     {
         _logger = logger;
-        _plexFactory = plexFactory;
         _settings = settings;
+    }
+
+    public async Task<Boolean> TestPlex(String host, String token)
+    {
+        _logger.LogDebug($"Testing plex host {host} and token {token}");
+        
+        if (!Uri.TryCreate(host, UriKind.Absolute, out var uriResult)
+            && uriResult.Scheme == Uri.UriSchemeHttp)
+        {
+            _logger.LogDebug($"Plex test failed. Host not a valid URI");
+            return false;
+        }
+
+        var cleanedHost = host.EndsWith(@"/") ? host : host + "/";
+        
+        using var client = new HttpClient();
+        using var request = new HttpRequestMessage(HttpMethod.Get, $@"{cleanedHost}?X-Plex-Token={token}");
+        var response = await client.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+
+        var content = await response.Content.ReadAsStringAsync();
+        _logger.LogDebug($"Plex test successful. {content}");
+
+        return true;
     }
 
     public async Task RefreshLibraries()
     {
+        _logger.LogInformation("Refreshing plex libraries.");
+        
+        var host = Settings.Get.Plex.Host;
         var token = Settings.Get.Plex.Token;
+        var libraries = Settings.Get.Plex.LibrariesToRefresh;
 
-        if (token == null)
+        if (host == null || token == null || libraries == null)
         {
-            _logger.LogDebug($"Plex Token {token} invalid.");
+            _logger.LogInformation("Refresh failed. host/token/libraries empty.");
             return;
         }
         
-        var account = _plexFactory.GetPlexAccount(token);
-        
-        var servers = await account.Servers();
-        _logger.LogDebug($"Found {servers.Count} servers for token {token}");
-        
-        servers.ForEach(async s =>
+        if (!Uri.TryCreate(host, UriKind.Absolute, out var uriResult)
+            && uriResult.Scheme == Uri.UriSchemeHttp)
         {
-            (await s.Libraries()).ForEach(l =>
-            {
-                _logger.LogDebug($"Found {l.Title} library");                
-            });
-        });
-    }
-
-    public async Task<List<LibraryBase>?> TestToken(String token)
-    {
-        return await GetAllLibraries(token);
-    }
-
-    private async Task<List<LibraryBase>?> GetAllLibraries(String token)
-    {
-        var account = _plexFactory.GetPlexAccount(token);
-        var servers = await account.Servers();
-
-        if (servers.Any())
-        {
-            return null;
+            _logger.LogInformation("Refresh failed. Host not a valid URI.");
+            return;
         }
 
-        var libraries = new List<LibraryBase>();
-        
-        foreach (var server in servers)
-        {
-            libraries.AddRange(await server.Libraries());
-        }
+        var libraryIndices = new List<String>();
 
-        return libraries;
+        libraries.Split(",")
+                 .ForEach(s =>
+                 {
+                     var trimmed = s.Trim();
+
+                     if (Int32.TryParse(s.Trim(), out _))
+                     {
+                         libraryIndices.Add(trimmed);
+                     }
+                 });
+
+        if (!libraryIndices.Any())
+        {
+            return;
+        }
+        
+        _logger.LogInformation($"{libraryIndices.Count} libraries to refresh.");
+        
+        var cleanedHost = host.EndsWith(@"/") ? host : host + "/";
+        
+        using var client = new HttpClient();
+
+        foreach (var index in libraryIndices)
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, $@"{cleanedHost}?library/sections/{index}/refresh?X-Plex-Token={token}");
+            var response = await client.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+        }
+        
+        _logger.LogInformation($"Finished refreshing libraries.");
     }
 }

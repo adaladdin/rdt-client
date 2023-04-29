@@ -86,17 +86,21 @@ export class SettingsComponent implements OnInit {
   }
 
   public testPlexConnection(): void {
+    const plexHost = this.tabs
+      .first((m) => m.key === 'Plex')
+      .settings.first((m) => m.key === 'Plex:Host').value as string;
+
     const plexToken = this.tabs
       .first((m) => m.key === 'Plex')
       .settings.first((m) => m.key === 'Plex:Token').value as string;
 
-    console.log('plex token', plexToken);
+    console.log(plexHost, plexToken);
 
     this.saving = true;
     this.testPlexError = null;
     this.testPlexSuccess = null;
 
-    this.settingsService.testPlex(plexToken).subscribe(
+    this.settingsService.testPlex(plexHost, plexToken).subscribe(
       (result) => {
         console.log('plex test result', result);
         this.saving = false;
@@ -104,7 +108,7 @@ export class SettingsComponent implements OnInit {
       },
       (err) => {
         console.log('plex test error', err);
-        this.testPathError = err.error;
+        this.testPlexError = err.error;
         this.saving = false;
       }
     );

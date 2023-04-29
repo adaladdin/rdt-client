@@ -119,9 +119,17 @@ http://127.0.0.1:6800/jsonrpc.")]
 
 public class DbSettingsPlex
 {
+    [DisplayName("Host")]
+    [Description(@"Enter plex host. EX: http://localhost:32400")]
+    public String? Host { get; set; } = null;
+    
     [DisplayName("Token")]
-    [Description(@"Plex user token for server admin to refresh libraries after a download is added.")]
+    [Description(@"Plex user token for server admin to refresh libraries after a download is added. You can get this by logging in to plex then visting https://plex.tv./devices.xml")]
     public String? Token { get; set; } = null;
+
+    [DisplayName("LibrariesToRefresh")]
+    [Description(@"Library indexes to refresh after a finished download. Comma separated. You can find this in the URL after you click on a library. EX: 1, 2")]
+    public String? LibrariesToRefresh { get; set; } = null;
 }
 
 public class DbSettingsProvider

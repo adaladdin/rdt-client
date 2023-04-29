@@ -95,21 +95,19 @@ public class SettingsController : Controller
             return BadRequest();
         }
 
-        if (String.IsNullOrEmpty(request.Token))
+        if (String.IsNullOrEmpty(request.Token) || String.IsNullOrEmpty(request.Host))
         {
-            return BadRequest("Invalid token");
+            return BadRequest("Invalid token or host");
         }
 
-        var libraries = await _plexService.TestToken(request.Token);
+        var libraries = await _plexService.TestPlex(request.Host, request.Token);
 
-        if (libraries == null)
+        if (!libraries)
         {
-            return NotFound("No libraries found");
+            return NotFound("Connection failed. Check logs for details");
         }
 
-        var combinedLibraries = String.Join(", ", libraries.Select(l => l.Title));
-        
-        return Ok(combinedLibraries);
+        return Ok();
     }
         
     [HttpGet]
@@ -240,6 +238,7 @@ public class SettingsControllerTestPathRequest
 
 public class SettingsControllerTestPlexRequest
 {
+    public String? Host { get; set; }
     public String? Token { get; set; }
 }
 
