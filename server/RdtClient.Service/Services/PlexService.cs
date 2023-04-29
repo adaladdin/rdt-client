@@ -91,16 +91,14 @@ public class PlexService
 
             foreach (var index in libraryIndices)
             {
-                var url = $@"{cleanedHost}?library/sections/{index}/refresh?X-Plex-Token={token}";
-                _logger.LogInformation($"Library refersh url: [{url}]");
-                using var request = new HttpRequestMessage(HttpMethod.Get, url);
+                using var request = new HttpRequestMessage(HttpMethod.Get, $@"{cleanedHost}library/sections/{index}/refresh?X-Plex-Token={token}");
                 var response = await client.SendAsync(request);
                 response.EnsureSuccessStatusCode();
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError($"Error while refreshing: {ex.Message} | {ex.StackTrace}");
+            _logger.LogError($"Error while refreshing library: {ex.Message} | {ex.StackTrace}");
         }
         finally
         {
