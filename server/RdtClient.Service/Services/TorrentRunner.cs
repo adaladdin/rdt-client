@@ -508,6 +508,8 @@ public class TorrentRunner
                         {
                             await _torrents.CreateDownloads(torrent.TorrentId);
                         }
+                        
+                        await _plexService.RefreshLibraries();
                     }
                 }
 
@@ -558,6 +560,8 @@ public class TorrentRunner
                         {
                             _logger.LogError(ex.Message, "Unable to run post process: {Message}", ex.Message);
                         }
+                        
+                        await _plexService.RefreshLibraries();
                     }
                     else
                     {
